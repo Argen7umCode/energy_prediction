@@ -24,14 +24,14 @@ def split_data(data, spliter_count):
 df = pd.read_csv('data/processed.csv')
 df.drop(columns=df.columns[0], inplace=True)
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 scaler = MinMaxScaler([-1, 1])
-print(device)
+print(f'using {DEVICE}')
 
-data = torch.FloatTensor(scaler.fit_transform(df.iloc[:, 0].to_numpy()))[:100]
+data = torch.FloatTensor(scaler.fit_transform(df.iloc[:, 0].to_numpy()))
 
-window_lenght = 2
-dataset = EnergyChickenFactory(data, window_lenght)
+WINDOW_LENGHT = 2
+dataset = EnergyChickenFactory(data, WINDOW_LENGHT)
 
 print(list(dataset))
 
