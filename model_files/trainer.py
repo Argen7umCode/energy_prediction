@@ -1,5 +1,6 @@
 import torch
 
+# TODO оптимизировать как-то класс и его конструктор, чтоб он не был таким загроможденными 
 
 class Trainer:
     def __init__(self, model, optimizer, loss_function, n_epochs, device, max_count_decreasing) -> None:
@@ -32,11 +33,17 @@ class Trainer:
             self.optimizer.step()
     
     def make_epoch(self):
+        # TODO Сделать пробег циклом по train_dataset и сохранять статистику loss по каждой из эпох 
         self.model.train()
         for sequence, labels in self.train_dataset:
             self.make_train_step(sequence, labels)
         loss = self.single_loss.item()
 
+        # TODO Сделать пробег циклом по test_dataset и сохранять статистику loss по каждой из эпох 
+        # TODO Сделать раннюю остановку - проверку на уменьшение loss, если он не уменьшается 
+        #      max_count_decreasing раз подряд, то обучение прекращается
+        #      если уменьшается, то сохраняем loss и параметры модели в best_model_parameters
+         
         self.model.eval()
         with torch.no_grad():
             for sequence, labels in self.test_dataset:
@@ -61,8 +68,6 @@ class Trainer:
             if not self.make_epoch():
                 break
         
-        
-
     def test(self):
         
         with torch.no_grad():

@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 # df.drop(columns=df.columns[0], inplace=True)
 # data = torch.FloatTensor(scaler.fit_transform(df.iloc[:, 0].to_numpy()))
 
-
+# TODO дописать этот класс, написать что-то!!!
 class DataModule:
     def __init__(self, train_sequences, test_sequences, batch_size):
         super().__init__()
