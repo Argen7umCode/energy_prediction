@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import torch
 import torch.nn as nn
+from utils.get_sequences import get_sequences
+from utils.split_data import split_data
+from sklearn.preprocessing import MinMaxScaler
 
 
 df = pd.read_csv('data/processed.csv')
@@ -11,7 +14,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 scaler = MinMaxScaler([-1, 1])
 print(device)
 
-data = torch.FloatTensor(scaler.fit_transform(df.iloc[:, 0].to_numpy())).to(device)
+data = torch.FloatTensor(scaler.fit_transform(df.iloc[:, 0].to_numpy().reshape((-1, 1)))).to(device)
 
 
 
@@ -62,11 +65,11 @@ for i in range(epochs):
 
     loss = single_loss.item
 
-    if loss <= best_loss:
-        best_loss = model.parameters()
-    else:
-        n += 1
-        if n > 5:
-            model.parameters = best_params 
+    # if loss <= best_loss:
+    #     best_loss = model.parameters()
+    # else:
+    #     n += 1
+    #     if n > 5:
+    #         model.parameters = best_params 
 
     print(f'epoch: {i:3} loss: {single_loss.item():10.8f}')
