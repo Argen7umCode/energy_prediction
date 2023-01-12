@@ -55,6 +55,8 @@ for i in range(epochs):
     for seq, labels in train[:100]:
         print(seq)
         print(seq.shape)
+        print(labels)
+        print(labels.shape)
         break
         optimizer.zero_grad()
         model.hidden_cell = (torch.zeros(1, 1, model.hidden_layer_size).to(device),
