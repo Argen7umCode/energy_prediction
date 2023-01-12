@@ -1,6 +1,7 @@
 from torch.utils.data import Dataset
 import torch
 
+
 class EnergyChickenFactoryDataset(Dataset):
     def __init__(self, sequences) -> None:
         self.sequences = sequences
@@ -11,7 +12,4 @@ class EnergyChickenFactoryDataset(Dataset):
     def __getitem__(self, index):
         sequence, label = self.sequences[index]
 
-        return {
-            'sequence' : torch.Tensor(sequence),
-            'label' : torch.tensor(label).float()
-        }
+        return (torch.Tensor(sequence), torch.tensor(label).float())

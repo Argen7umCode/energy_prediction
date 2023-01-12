@@ -9,7 +9,7 @@ class Trainer:
         self.loss_function = loss_function
         self.n_epochs = n_epochs
         self.device = device
-        self.best_parameters = self.model.parameters()
+        self.best_parameters = self.model.state_dict()
         self.min_loss = torch.inf
         self.current_count_decreasing = 0
         self.max_count_decreasing = max_count_decreasing
@@ -25,6 +25,7 @@ class Trainer:
             torch.zeros(1, 1, self.model.hidden_layer_size).to(self.device),
             torch.zeros(1, 1, self.model.hidden_layer_size).to(self.device)
         )
+        # print(self.model.hidden_cell)
         y_pred = self.model(sequence)
 
         self.single_loss = self.loss_function(y_pred, labels)
@@ -36,7 +37,10 @@ class Trainer:
         # TODO Сделать пробег циклом по train_dataset и сохранять статистику loss по каждой из эпох 
         self.model.train()
         for sequence, labels in self.train_dataset:
-            self.make_train_step(sequence, labels)
+            sequence = sequence.squeeze()#.view((1, -1))
+            print(sequence)
+            labels = labels.squeeze()
+            self.make_step(sequence, labels)
         loss = self.single_loss.item()
 
         # TODO Сделать пробег циклом по test_dataset и сохранять статистику loss по каждой из эпох 
@@ -56,7 +60,7 @@ class Trainer:
     def control_loss(self, loss):
         if loss <= self.min_loss:
             self.min_loss = loss
-            self.best_parameters = self.model.parameters()
+            self.best_parameters = self.model.state_dict()
             self.current_count_decreasing = 0
         else:
             self.current_count_decreasing += 1
@@ -67,7 +71,11 @@ class Trainer:
         for epoch in range(self.n_epochs):
             if not self.make_epoch():
                 break
-        
+    
+    def get_best_model(self):
+        self.model.load_state_dict(self.best_parameters)
+        return self.model
+
     def test(self):
         
         with torch.no_grad():

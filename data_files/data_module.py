@@ -1,39 +1,39 @@
 # import torch
 # import pandas as pd
-from dataset import EnergyChickenFactory
+# import dataset
 from torch.utils.data import DataLoader
-
+from .dataset import EnergyChickenFactoryDataset
 
 # df = pd.read_csv('data/processed.csv')
 # df.drop(columns=df.columns[0], inplace=True)
 # data = torch.FloatTensor(scaler.fit_transform(df.iloc[:, 0].to_numpy()))
 
 # TODO дописать этот класс, написать что-то!!!
-class DataModule:
-    def __init__(self, train_sequences, test_sequences, batch_size):
+class EnergyChickenDataModule:
+    def __init__(self, train_sequences, test_sequences, batch_size=1):
         super().__init__()
         self.train_sequences = train_sequences
         self.test_sequences = test_sequences
         self.batch_size = batch_size
 
     def setup(self):
-        self.train_dataset = EnergyChickenFactory(self.train_sequences)
-        self.test_dataset = EnergyChickenFactory(self.test_sequences)
+        self.train_dataset = EnergyChickenFactoryDataset(self.train_sequences)
+        self.test_dataset = EnergyChickenFactoryDataset(self.test_sequences)
     
     def train_dataloader(self):
         return DataLoader(
             self.train_dataset,
             batch_size=self.batch_size,
             shuffle=False,
-            num_workers=1
+            # num_workers=1
         )
 
-    def val_dataloader(self):
+    def test_dataloader(self):
         return DataLoader(
             self.test_dataset, 
             batch_size = 1, 
             shuffle=False,
-            num_workers=1
+            # num_workers=1
         )
 
         
