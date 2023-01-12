@@ -39,7 +39,7 @@ class LSTM(nn.Module):
 
     def forward(self, input_seq):
         input_seq.to(self.device)
-        print(len(input_seq))
+
         lstm_out, self.hidden_cell = self.lstm(input_seq.view(len(input_seq) ,1, -1).to(self.device), self.hidden_cell)
         predictions = self.linear(lstm_out.view(len(input_seq), -1))
         return predictions[-1]

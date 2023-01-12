@@ -20,6 +20,7 @@ WINDOW_LENGHT = 100
 BATCH_SIZE = 32
 MAX_COUNT_DECREASING = 5
 LEARNING_RATE = 0.001
+N_EPOCHS = 10
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 df = pd.read_csv('data_files/processed.csv')
@@ -38,7 +39,7 @@ criterion = nn.MSELoss()
 trainer = Trainer(model=model, 
                   optimizer=optimizer, 
                   loss_function=criterion,
-                  n_epochs=WINDOW_LENGHT,
+                  n_epochs=N_EPOCHS,
                   device=DEVICE,
                   max_count_decreasing=MAX_COUNT_DECREASING)
 
@@ -53,8 +54,3 @@ trainer.fit()
 #     print(x.shape)
 #     print(x)
 #     break
-
-
-
-
-
