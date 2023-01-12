@@ -20,7 +20,7 @@ class Trainer:
         self.train_dataset = train_dataset
         self.test_dataset = test_dataset
                 
-    def make_step(self, sequence, labels, train=True):
+    def __make_step(self, sequence, labels, is_train=True):
         self.optimizer.zero_grad()
         self.model.hidden_cell = (
             torch.zeros(1, 1, self.model.hidden_layer_size).to(self.device),
@@ -30,42 +30,23 @@ class Trainer:
         y_pred = self.model(sequence)
 
         self.single_loss = self.loss_function(y_pred, labels)
-        if train:
+        if is_train:
             self.single_loss.backward()
             self.optimizer.step()
-        
-    def make_epoch(self):
-        # TODO Сделать пробег циклом по train_dataset и сохранять статистику loss по каждой из эпох 
-        self.model.train()
+    
+    def __make_mileage_according_data(self, data, is_train=True):
         epoch_loss = []
-        for sequence, labels in self.train_dataset:
+        for sequence, labels in data:
             sequence = sequence.view((-1, 1))
             labels = labels.view((-1, 1))
 
-            self.make_step(sequence, labels)
+            self.__make_step(sequence, labels, is_train)
             loss = self.single_loss.item()
             epoch_loss.append(loss)
+
         mean_epoch_loss = torch.mean(torch.tensor(epoch_loss))
-        self.loss_log['train'].append(mean_epoch_loss)
-        
-        print(f'LOSS TRAIN {mean_epoch_loss:10.6f}')
+        self.loss_log['train' if is_train else 'test'].append(mean_epoch_loss)
 
-        # TODO Сделать пробег циклом по test_dataset и сохранять статистику loss по каждой из эпох 
-        # TODO Сделать раннюю остановку - проверку на уменьшение loss, если он не уменьшается 
-        #      max_count_decreasing раз подряд, то обучение прекращается
-        #      если уменьшается, то сохраняем loss и параметры модели в best_model_parameters
-         
-        # self.model.eval()
-        # with torch.no_grad():
-        #     for sequence, labels in self.test_dataset:
-        #         sequence = sequence.view((-1, 1))
-        #         labels = labels.view((-1, 1))
-        #         self.make_step(sequence, labels)
-        #     loss = self.single_loss.item()
-        # print(f'LOSS TEST {loss}')
-
-        # if not self.control_loss(loss):
-        #     return False
         
     def control_loss(self, loss):
         if loss <= self.min_loss:
@@ -75,23 +56,34 @@ class Trainer:
         else:
             self.current_count_decreasing += 1
             if self.current_count_decreasing >= self.max_count_decreasing:
-                return False
+                return 'stop'
+
+    def make_epoch(self):
+        self.model.train()
+        self.__make_mileage_according_data(self.train_dataset)
+        mean_epoch_loss = self.loss_log['train'][-1]
+        print(f'LOSS TRAIN {mean_epoch_loss:10.6f}')
+
+        # TODO Сделать пробег циклом по test_dataset и сохранять статистику loss по каждой из эпох 
+        # TODO Сделать раннюю остановку - проверку на уменьшение loss, если он не уменьшается 
+        #      max_count_decreasing раз подряд, то обучение прекращается
+        #      если уменьшается, то сохраняем loss и параметры модели в best_model_parameters
+         
+        self.model.eval()
+        with torch.no_grad():
+            self.__make_mileage_according_data(self.test_dataset, False)
+            mean_epoch_loss = self.loss_log['test'][-1]
+        print(f'LOSS TEST {mean_epoch_loss}')
+
+        if not self.control_loss(mean_epoch_loss):
+            return True
 
     def fit(self):
         for epoch in range(self.n_epochs):
-            if self.make_epoch():
+            if self.make_epoch() == 'stop':
                 break
     
     def get_best_model(self):
         self.model.load_state_dict(self.best_parameters)
         return self.model
 
-    def test(self):
-        
-        with torch.no_grad():
-            for sequence, labels in self.test_dataset:
-                self.make_train_step(sequence, labels)
-            loss = self.single_loss.item()
-
-            if not self.control_loss(loss):
-                return False
