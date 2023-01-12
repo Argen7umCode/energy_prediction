@@ -53,6 +53,9 @@ n = 0
 
 for i in range(epochs):
     for seq, labels in train[:100]:
+        print(seq)
+        print(seq.shape)
+        break
         optimizer.zero_grad()
         model.hidden_cell = (torch.zeros(1, 1, model.hidden_layer_size).to(device),
                         torch.zeros(1, 1, model.hidden_layer_size).to(device))
@@ -63,13 +66,13 @@ for i in range(epochs):
         single_loss.backward()
         optimizer.step()
 
-    loss = single_loss.item
+    # loss = single_loss.item
 
-    # if loss <= best_loss:
-    #     best_loss = model.parameters()
-    # else:
-    #     n += 1
-    #     if n > 5:
-    #         model.parameters = best_params 
+    # # if loss <= best_loss:
+    # #     best_loss = model.parameters()
+    # # else:
+    # #     n += 1
+    # #     if n > 5:
+    # #         model.parameters = best_params 
 
-    print(f'epoch: {i:3} loss: {single_loss.item():10.8f}')
+    # print(f'epoch: {i:3} loss: {single_loss.item():10.8f}')
