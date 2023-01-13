@@ -77,8 +77,8 @@ class Trainer:
             self.__make_mileage_according_data(self.test_dataset, False)
 
         mean_epoch_loss = self.logs['test_loss'][-1]
-        if not self.control_loss(mean_epoch_loss):
-            return True
+        if self.control_loss(mean_epoch_loss) == 'stop':
+            return 'stop'
 
     def get_log_by_index(self, index):
         try:
