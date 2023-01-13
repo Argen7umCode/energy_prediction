@@ -77,7 +77,7 @@ class Trainer:
             self.__make_mileage_according_data(self.test_dataset, False)
 
         mean_epoch_loss = self.logs['test_loss'][-1]
-        print(self.logs['train_loss'][-1], self.logs['test_loss'][-1])
+
         if self.control_loss(mean_epoch_loss) == 'stop':
             return 'stop'
 
