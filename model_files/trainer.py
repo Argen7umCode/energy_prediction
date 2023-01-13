@@ -1,5 +1,7 @@
 import torch
-
+from time import time
+from datetime import datetime
+from numpy import round
 # TODO оптимизировать как-то класс и его конструктор, чтоб он не был таким загроможденными 
 
 class Trainer:
@@ -13,7 +15,7 @@ class Trainer:
         self.min_loss = torch.inf
         self.current_count_decreasing = 0
         self.max_count_decreasing = max_count_decreasing
-        self.loss_log = {'train' : [], 'test' : []}
+        self.logs = {'train_loss' : [], 'test_loss' : [], 'time' : []}
         self.model.to(self.device)
 
     def upload_data(self, train_dataset, test_dataset):
@@ -33,8 +35,12 @@ class Trainer:
         if is_train:
             self.single_loss.backward()
             self.optimizer.step()
-    
-    def __make_mileage_according_data(self, data, is_train=True):
+
+    def __add_log_to_logs(self, col, value):
+        if col in ['train_loss', 'test_loss', 'time']:
+            self.logs[col].append(round(float(value), 6))
+
+    def __make_mileage_according_data(self, data, is_train=True) -> None:
         epoch_loss = []
         for sequence, labels in data:
             sequence = sequence.view((-1, 1))
@@ -45,9 +51,9 @@ class Trainer:
             epoch_loss.append(loss)
 
         mean_epoch_loss = torch.mean(torch.tensor(epoch_loss))
-        self.loss_log['train' if is_train else 'test'].append(mean_epoch_loss)
-
-        
+        self.__add_log_to_logs('train_loss' if is_train else 'test_loss', 
+                                mean_epoch_loss)
+    
     def control_loss(self, loss):
         if loss <= self.min_loss:
             self.min_loss = loss
@@ -61,10 +67,7 @@ class Trainer:
     def make_epoch(self):
         self.model.train()
         self.__make_mileage_according_data(self.train_dataset)
-        mean_epoch_loss = self.loss_log['train'][-1]
-        print(f'LOSS TRAIN {mean_epoch_loss:10.6f}')
 
-        # TODO Сделать пробег циклом по test_dataset и сохранять статистику loss по каждой из эпох 
         # TODO Сделать раннюю остановку - проверку на уменьшение loss, если он не уменьшается 
         #      max_count_decreasing раз подряд, то обучение прекращается
         #      если уменьшается, то сохраняем loss и параметры модели в best_model_parameters
@@ -72,18 +75,46 @@ class Trainer:
         self.model.eval()
         with torch.no_grad():
             self.__make_mileage_according_data(self.test_dataset, False)
-            mean_epoch_loss = self.loss_log['test'][-1]
-        print(f'LOSS TEST {mean_epoch_loss}')
 
+        mean_epoch_loss = self.logs['test_loss'][-1]
         if not self.control_loss(mean_epoch_loss):
             return True
 
-    def fit(self):
+    def get_log_by_index(self, index):
+        try:
+            train_loss = self.logs['train_loss'][index]
+            test_loss = self.logs['test_loss'][index]
+            time = self.logs['time'][index]
+        except IndexError:
+            return None
+        else:
+            lenght_logs = len(self.logs['train_loss'])
+            return {
+                'epoch'     : lenght_logs if index != lenght_logs else index,
+                'train_loss': train_loss,
+                'test_loss' : test_loss,
+                'time'      : time
+            }
+
+    def print_log_by_index(self, index):
+        log = self.get_log_by_index(index)
+        message = f'{" ".join([" ".join(map(str, [key, value])) for key, value in log.items()])}'
+        print(message)
+
+    def fit(self, log=True):
         for epoch in range(self.n_epochs):
+            start_time = time()
             if self.make_epoch() == 'stop':
                 break
-    
+            time_delta = time() - start_time
+            self.__add_log_to_logs('time', time_delta)
+            if log:
+                self.print_log_by_index(-1)
+
     def get_best_model(self):
         self.model.load_state_dict(self.best_parameters)
         return self.model
+
+    def make_checkpoint_model(self, model):
+        torch.save(model.state_dict(), f'checkpoints/model_{datetime().strftime("%Y-%m-%d %H-%M-%S")}')
 
